@@ -64,8 +64,9 @@ function log(m){logs.unshift(new Date().toLocaleTimeString()+"  "+m);logs=logs.s
 function procs(){$("pr").innerHTML=P.map((p,i)=>{const dn=i==1&&!up;return '<div class="row"><i class="d" style="background:'+(dn?"#e11d48":p[2])+'"></i><div><b>'+p[0]+'</b><br><small>'+p[1]+'</small></div><span>'+(dn?"restarting":"running")+'</span></div>'}).join("")}
 function sample(){t++;return{speed:62+34*Math.sin(t/16)+7*Math.sin(t/4),gap:Math.max(5,32+27*Math.sin(t/10+1)),lat:7.5+3*Math.random()+(Math.random()<.04?25+30*Math.random():0)}}
 async function probe(){try{const r=await fetch("/api/stats",{cache:"no-store"});if(r.ok){live=true;$("mode").textContent="Live from QNX";$("mode").className="badge live"}}catch(e){}}
-async function next(){if(!live)return sample();try{const r=await fetch("/api/stats",{cache:"no-store"});return await r.json()}catch(e){live=false;return sample()}}
+async function next(){if(!live)return sample();try{const r=await fetch("/api/stats",{cache:"no-store"});if(!r.ok)throw 0;return await r.json()}catch(e){live=false;$("mode").textContent="Demo data";$("mode").className="badge";return sample()}}
 function draw(d){
+if(live&&d.up!==undefined){const u=d.up==1;if(u!==up){up=u;procs();log(u?"Supervisor restarted the monitor":"Monitor process died")}}
 const v=Math.max(d.speed,0),ms=v/3.6,ttc=ms>.5?d.gap/ms:9.9;
 let s="s-safe",w="All clear",y="Gap and speed are within limits";
 if(!up){s="s-bad";w="Monitor down";y="Supervisor is restarting it"}
@@ -82,6 +83,6 @@ $("ar").setAttribute("points","0,90 "+pts.join(" ")+" "+((lat.length-1)*300/59).
 const mn=Math.min(...lat),mx=Math.max(...lat),av=lat.reduce((a,b)=>a+b,0)/lat.length;
 $("st2").textContent="Window: min "+mn.toFixed(1)+" µs, avg "+av.toFixed(1)+" µs, max "+mx.toFixed(1)+" µs";
 }
-$("kill").onclick=()=>{if(!up)return;up=false;procs();log("Monitor killed (fault injection)");setTimeout(()=>{up=true;procs();log("Supervisor restarted the monitor in 1.2 s")},1200)};
-procs();log("Dashboard started");probe();setInterval(async()=>draw(await next()),500);
+$("kill").onclick=()=>{if(live){fetch("/api/kill",{method:"POST"});log("Kill sent to QNX");return}if(!up)return;up=false;procs();log("Monitor killed (fault injection)");setTimeout(()=>{up=true;procs();log("Supervisor restarted the monitor in 1.2 s")},1200)};
+procs();log("Dashboard started");probe();setInterval(()=>{if(!live)probe()},3000);setInterval(async()=>draw(await next()),500);
 </script></body></html>

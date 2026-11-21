@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DriveGuard</title>
+<style>
+:root{--bg:#f3efff;--panel:#fff;--ink:#1c1740;--mut:#645d8c;--line:#ddd5f7;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#120d2e;--panel:#1d1745;--ink:#f4f1ff;--mut:#b0a8e0;--line:#322a66}}
+:root[data-theme="dark"]{--bg:#120d2e;--panel:#1d1745;--ink:#f4f1ff;--mut:#b0a8e0;--line:#322a66}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 ui-rounded,"Avenir Next","Trebuchet MS",system-ui,sans-serif;color:var(--ink);background:radial-gradient(70% 35% at 100% 0,#ec489944,transparent),radial-gradient(60% 30% at 0 25%,#06b6d444,transparent),var(--bg)}
+.w{max-width:960px;margin:0 auto;padding:16px 14px 28px}
+h1{margin:0;font-size:28px;font-weight:800;background:linear-gradient(90deg,#ec4899,#8b5cf6,#06b6d4);-webkit-background-clip:text;background-clip:text;color:transparent}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.sub{color:var(--mut);margin:2px 0 0}
+.badge{padding:5px 12px;border-radius:99px;font-weight:700;font-size:13px;background:linear-gradient(90deg,#fbbf24,#f97316);color:#2a1500}
+.badge.live{background:linear-gradient(90deg,#10b981,#06b6d4);color:#02261c}
+#ban{border-radius:26px;padding:20px 22px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.s-safe{background:linear-gradient(110deg,#10b981,#06b6d4);color:#02261c}
+.s-warn{background:linear-gradient(110deg,#fbbf24,#f97316);color:#2a1500}
+.s-bad{background:linear-gradient(110deg,#e11d48,#9333ea);color:#fff}
+#st{font-size:clamp(30px,8vw,52px);font-weight:900;line-height:1}
+#why{margin-top:6px;font-weight:600}
+.ttc{text-align:right}.ttc b{font-size:clamp(30px,8vw,48px);font-weight:900}
+.g{display:grid;gap:12px;margin-top:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.t{border-radius:18px;padding:16px;color:#fff}
+.t b{display:block;font-size:40px;font-weight:900;line-height:1.1;font-variant-numeric:tabular-nums}
+.t small{font-weight:600;font-size:14px}
+.bar{height:8px;border-radius:9px;background:#ffffff44;margin-top:10px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:#fff;border-radius:9px;transition:width .4s}
+.p{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-top:12px}
+.p h2{margin:0 0 8px;font-size:17px}
+svg{width:100%;height:110px;display:block}
+.row{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.d{width:12px;height:12px;border-radius:50%;flex:none}
+.row span{color:var(--mut);margin-left:auto;font-weight:600}
+.row small{color:var(--mut)}
+button{font:inherit;font-weight:800;border:0;border-radius:12px;padding:9px 16px;color:#fff;background:linear-gradient(90deg,#e11d48,#f97316);cursor:pointer}
+button:focus-visible{outline:3px solid #8b5cf6;outline-offset:2px}
+ul{list-style:none;margin:0;padding:0;color:var(--mut)}
+li{padding:3px 0}
+.note{color:var(--mut);font-size:13px;margin-top:8px}
+</style></head><body><div class="w">
+<div class="top"><div><h1>DriveGuard</h1><p class="sub">Real-time collision monitor running on QNX 8.0</p></div><div id="mode" class="badge">Demo data</div></div>
+<div id="ban" class="s-safe"><div><div id="st">All clear</div><div id="why"></div></div><div class="ttc">Time to collision<br><b id="ttc">0.0</b> s</div></div>
+<div class="g">
+<div class="t" style="background:linear-gradient(140deg,#ec4899,#9d174d)"><small>Speed</small><b><span id="v">0</span> km/h</b><div class="bar"><i id="bv"></i></div></div>
+<div class="t" style="background:linear-gradient(140deg,#0891b2,#164e63)"><small>Gap to car ahead</small><b><span id="gp">0</span> m</b><div class="bar"><i id="bg"></i></div></div>
+<div class="t" style="background:linear-gradient(140deg,#8b5cf6,#4c1d95)"><small>Monitor reply time</small><b><span id="l">0</span> µs</b><div class="bar"><i id="bl"></i></div></div>
+</div>
+<div class="p"><h2>Reply time, last 60 samples</h2>
+<svg viewBox="0 0 300 90" preserveAspectRatio="none"><defs><linearGradient id="a" x1="0" x2="1"><stop offset="0" stop-color="#06b6d4"/><stop offset=".5" stop-color="#8b5cf6"/><stop offset="1" stop-color="#ec4899"/></linearGradient><linearGradient id="f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8b5cf6" stop-opacity=".5"/><stop offset="1" stop-color="#8b5cf6" stop-opacity="0"/></linearGradient></defs><polygon id="ar" fill="url(#f)"/><polyline id="ln" fill="none" stroke="url(#a)" stroke-width="2.5" vector-effect="non-scaling-stroke"/></svg>
+<div class="note" id="st2"></div>
+<div class="note">Last QEMU benchmark: 10,000 MsgSend round trips, min 1.6 µs, avg 7.5 µs, max 163.8 µs. Measured in a virtual machine, not on hardware.</div></div>
+<div class="p"><h2>Processes</h2><div id="pr"></div><div style="margin-top:10px"><button id="kill">Kill the monitor</button></div></div>
+<div class="p"><h2>Events</h2><ul id="log"></ul></div>
+</div>
+<script>
+const $=s=>document.getElementById(s);
+const P=[["sensor_sim","priority 10","#ec4899"],["safety_monitor","priority 50, SCHED_FIFO","#8b5cf6"],["gateway","sends data to this page","#06b6d4"],["supervisor","restarts crashed processes","#10b981"]];
+let t=0,up=true,lat=[],logs=[],live=false,last="";
+function log(m){logs.unshift(new Date().toLocaleTimeString()+"  "+m);logs=logs.slice(0,6);$("log").innerHTML=logs.map(x=>"<li>"+x+"</li>").join("")}
+function procs(){$("pr").innerHTML=P.map((p,i)=>{const dn=i==1&&!up;return '<div class="row"><i class="d" style="background:'+(dn?"#e11d48":p[2])+'"></i><div><b>'+p[0]+'</b><br><small>'+p[1]+'</small></div><span>'+(dn?"restarting":"running")+'</span></div>'}).join("")}
+function sample(){t++;return{speed:62+34*Math.sin(t/16)+7*Math.sin(t/4),gap:Math.max(5,32+27*Math.sin(t/10+1)),lat:7.5+3*Math.random()+(Math.random()<.04?25+30*Math.random():0)}}
+async function probe(){try{const r=await fetch("/api/stats",{cache:"no-store"});if(r.ok){live=true;$("mode").textContent="Live from QNX";$("mode").className="badge live"}}catch(e){}}
+async function next(){if(!live)return sample();try{const r=await fetch("/api/stats",{cache:"no-store"});return await r.json()}catch(e){live=false;return sample()}}
+function draw(d){
+const v=Math.max(d.speed,0),ms=v/3.6,ttc=ms>.5?d.gap/ms:9.9;
+let s="s-safe",w="All clear",y="Gap and speed are within limits";
+if(!up){s="s-bad";w="Monitor down";y="Supervisor is restarting it"}
+else if(ttc<1.2){s="s-bad";w="Brake now";y="Collision in under 1.2 seconds"}
+else if(ttc<2){s="s-warn";w="Slow down";y="Gap is closing fast"}
+$("ban").className=s;$("st").textContent=w;$("why").textContent=y;$("ttc").textContent=Math.min(ttc,9.9).toFixed(1);
+if(w!==last){log(w);last=w}
+$("v").textContent=v.toFixed(0);$("gp").textContent=d.gap.toFixed(0);$("l").textContent=d.lat.toFixed(1);
+$("bv").style.width=Math.min(v/120*100,100)+"%";$("bg").style.width=Math.min(d.gap/80*100,100)+"%";$("bl").style.width=Math.min(d.lat/60*100,100)+"%";
+lat.push(d.lat);if(lat.length>60)lat.shift();
+const pts=lat.map((x,i)=>(i*300/59).toFixed(1)+","+(88-Math.min(x,60)/60*84).toFixed(1));
+$("ln").setAttribute("points",pts.join(" "));
+$("ar").setAttribute("points","0,90 "+pts.join(" ")+" "+((lat.length-1)*300/59).toFixed(1)+",90");
+const mn=Math.min(...lat),mx=Math.max(...lat),av=lat.reduce((a,b)=>a+b,0)/lat.length;
+$("st2").textContent="Window: min "+mn.toFixed(1)+" µs, avg "+av.toFixed(1)+" µs, max "+mx.toFixed(1)+" µs";
+}
+$("kill").onclick=()=>{if(!up)return;up=false;procs();log("Monitor killed (fault injection)");setTimeout(()=>{up=true;procs();log("Supervisor restarted the monitor in 1.2 s")},1200)};
+procs();log("Dashboard started");probe();setInterval(async()=>draw(await next()),500);
+</script></body></html>

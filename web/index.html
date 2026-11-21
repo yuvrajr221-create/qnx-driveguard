@@ -76,7 +76,7 @@ $("ban").className=s;$("st").textContent=w;$("why").textContent=y;$("ttc").textC
 if(w!==last){log(w);last=w}
 $("v").textContent=v.toFixed(0);$("gp").textContent=d.gap.toFixed(0);$("l").textContent=d.lat.toFixed(1);
 $("bv").style.width=Math.min(v/120*100,100)+"%";$("bg").style.width=Math.min(d.gap/80*100,100)+"%";$("bl").style.width=Math.min(d.lat/60*100,100)+"%";
-lat.push(d.lat);if(lat.length>60)lat.shift();
+if(!(live&&d.up===0&&lat.length))lat.push(d.lat);if(lat.length>60)lat.shift();
 const pts=lat.map((x,i)=>(i*300/59).toFixed(1)+","+(88-Math.min(x,60)/60*84).toFixed(1));
 $("ln").setAttribute("points",pts.join(" "));
 $("ar").setAttribute("points","0,90 "+pts.join(" ")+" "+((lat.length-1)*300/59).toFixed(1)+",90");

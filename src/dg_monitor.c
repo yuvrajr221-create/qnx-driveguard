@@ -26,7 +26,7 @@ int main(void) {
         float head = v > 0.5f ? m.gap_m / v : 99.0f;
         r.seq = m.seq;
         r.ttc = ttc;
-        r.level = (ttc < 1.5f || head < 0.5f) ? 2 : (ttc < 2.5f || head < 1.0f) ? 1 : 0;
+        r.level = (ttc < 2.0f || head < 0.6f) ? 2 : (ttc < 3.0f || head < 1.0f) ? 1 : 0;
         MsgReply(rcvid, 0, &r, sizeof(r));
     }
 }

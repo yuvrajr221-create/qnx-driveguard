@@ -67,11 +67,11 @@ async function probe(){try{const r=await fetch("/api/stats",{cache:"no-store"});
 async function next(){if(!live)return sample();try{const r=await fetch("/api/stats",{cache:"no-store"});if(!r.ok)throw 0;return await r.json()}catch(e){live=false;$("mode").textContent="Demo data";$("mode").className="badge";return sample()}}
 function draw(d){
 if(live&&d.up!==undefined){const u=d.up==1;if(u!==up){up=u;procs();log(u?"Supervisor restarted the monitor":"Monitor process died")}}
-const v=Math.max(d.speed,0),ms=v/3.6,ttc=ms>.5?d.gap/ms:9.9;
+const v=Math.max(d.speed,0),ms=v/3.6,ttc=d.ttc!==undefined?d.ttc:(ms>.5?d.gap/ms:9.9);
 let s="s-safe",w="All clear",y="Gap and speed are within limits";
 if(!up){s="s-bad";w="Monitor down";y="Supervisor is restarting it"}
-else if(ttc<1.2){s="s-bad";w="Brake now";y="Collision in under 1.2 seconds"}
-else if(ttc<2){s="s-warn";w="Slow down";y="Gap is closing fast"}
+else if(d.level!==undefined?d.level==2:ttc<1.2){s="s-bad";w="Brake now";y="Collision risk is high, braking hard"}
+else if(d.level!==undefined?d.level==1:ttc<2){s="s-warn";w="Slow down";y="Gap is closing fast"}
 $("ban").className=s;$("st").textContent=w;$("why").textContent=y;$("ttc").textContent=Math.min(ttc,9.9).toFixed(1);
 if(w!==last){log(w);last=w}
 $("v").textContent=v.toFixed(0);$("gp").textContent=d.gap.toFixed(0);$("l").textContent=d.lat.toFixed(1);

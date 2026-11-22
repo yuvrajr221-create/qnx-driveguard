@@ -4,8 +4,8 @@
 #include <pthread.h>
 #include <sched.h>
 #include <sys/neutrino.h>
-typedef struct { uint32_t seq; float speed_kmh; float gap_m; } req_t;
-typedef struct { uint32_t seq; int alert; } rep_t;
+typedef struct { uint32_t seq; float speed_kmh; float gap_m; float closing_ms; } req_t;
+typedef struct { uint32_t seq; int level; float ttc; } rep_t;
 int main(void) {
     int chid = ChannelCreate(0);
     struct sched_param sp = { .sched_priority = 50 };
@@ -22,8 +22,11 @@ int main(void) {
         int rcvid = MsgReceive(chid, &m, sizeof(m), NULL);
         if (rcvid <= 0) continue;
         float v = m.speed_kmh / 3.6f;
+        float ttc = m.closing_ms > 0.1f ? m.gap_m / m.closing_ms : 99.0f;
+        float head = v > 0.5f ? m.gap_m / v : 99.0f;
         r.seq = m.seq;
-        r.alert = (v > 0.5f && m.gap_m / v < 2.0f) ? 1 : 0;
+        r.ttc = ttc;
+        r.level = (ttc < 1.5f || head < 0.5f) ? 2 : (ttc < 2.5f || head < 1.0f) ? 1 : 0;
         MsgReply(rcvid, 0, &r, sizeof(r));
     }
 }

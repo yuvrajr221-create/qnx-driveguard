@@ -6,7 +6,7 @@ Category: Automotive & Mobility
 
 ## What it does
 
-- `dg_sensor` (QNX process) runs a small car-following simulation: a lead car brakes and speeds up on a 30 second cycle, and our car brakes as the monitor tells it to. It sends every 10 ms step to the monitor with QNX message passing (`MsgSend`). If the monitor is down it falls back to gentle braking.
+- `dg_sensor` (QNX process) runs a small car-following simulation: a lead car brakes and speeds up on a 30 second cycle, and our car brakes as the monitor tells it to. It is driven by a QNX periodic timer that delivers a pulse every 10 ms (`timer_create`, `SIGEV_PULSE_INIT`) and reports the largest period error. It sends every step to the monitor with QNX message passing (`MsgSend`). If the monitor is down it falls back to gentle braking.
 - `dg_monitor` (QNX process, SCHED_FIFO priority 50) computes time to collision (gap divided by closing speed) and replies with a level: 0 safe, 1 warning (under 3 s), 2 emergency (under 2 s). It also looks at the time gap to the car ahead (`MsgReceive`, `MsgReply`).
 - `dg_supervisor.sh` (runs on QNX) starts the monitor again if it dies.
 - `gateway.py` (runs on the Linux host) reads the sensor output from the QNX VM over SSH and serves `/api/stats`. `/api/kill` runs `slay dg_monitor` inside the VM, so the dashboard can inject a real fault.
@@ -17,7 +17,8 @@ How we set up QNX 8.0 with only a phone: see [docs/TUTORIAL.md](docs/TUTORIAL.md
 ## Where QNX is used
 
 - `src/dg_monitor.c`: `ChannelCreate`, `MsgReceive`, `MsgReply`, `pthread_setschedparam` with SCHED_FIFO 50
-- `src/dg_sensor.c`: `ConnectAttach`, `MsgSend`, `ConnectDetach`
+- `src/dg_sensor.c`: `ConnectAttach`, `MsgSend`, `ConnectDetach`, `timer_create` with `SIGEV_PULSE_INIT`, pulse delivery through `MsgReceive`
+- `src/dg_load.c`: priority load test (`SCHED_FIFO`, `SCHED_RR`, `clock_nanosleep`, `MsgSend`)
 - `src/ipc_latency.c`: MsgSend/MsgReceive latency benchmark between two threads
 - `scripts/dg_supervisor.sh`: runs inside the QNX VM
 - `scripts/run_qemu.sh`: boots the QNX image built with `mkqnximage`

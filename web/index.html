@@ -81,7 +81,7 @@ const pts=lat.map((x,i)=>(i*300/59).toFixed(1)+","+(88-Math.min(x,60)/60*84).toF
 $("ln").setAttribute("points",pts.join(" "));
 $("ar").setAttribute("points","0,90 "+pts.join(" ")+" "+((lat.length-1)*300/59).toFixed(1)+",90");
 const mn=Math.min(...lat),mx=Math.max(...lat),av=lat.reduce((a,b)=>a+b,0)/lat.length;
-$("st2").textContent="Window: min "+mn.toFixed(1)+" µs, avg "+av.toFixed(1)+" µs, max "+mx.toFixed(1)+" µs";
+$("st2").textContent="Window: min "+mn.toFixed(1)+" µs, avg "+av.toFixed(1)+" µs, max "+mx.toFixed(1)+" µs"+(d.jit!==undefined?", timer jitter up to "+d.jit.toFixed(0)+" µs":"");
 }
 $("kill").onclick=()=>{if(live){fetch("/api/kill",{method:"POST"});log("Kill sent to QNX");return}if(!up)return;up=false;procs();log("Monitor killed (fault injection)");setTimeout(()=>{up=true;procs();log("Supervisor restarted the monitor in 1.2 s")},1200)};
 procs();log("Dashboard started");probe();setInterval(()=>{if(!live)probe()},3000);setInterval(async()=>draw(await next()),500);

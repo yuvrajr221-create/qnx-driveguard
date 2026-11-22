@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <time.h>
+#include <signal.h>
 #include <unistd.h>
 #include <sys/neutrino.h>
 typedef struct { uint32_t seq; float speed_kmh; float gap_m; float closing_ms; } req_t;
@@ -14,10 +15,10 @@ static int attach(void) {
     if (n != 2) return -1;
     return ConnectAttach(0, pid, chid, _NTO_SIDE_CHANNEL, 0);
 }
-static void out(float s, float g, double lat, int up, int lv, float ttc, int brk) {
+static void out(float s, float g, double lat, int up, int lv, float ttc, int brk, double jit) {
     FILE *f = fopen("/tmp/stats.tmp", "w");
     if (!f) return;
-    fprintf(f, "{\"speed\":%.1f,\"gap\":%.1f,\"lat\":%.1f,\"up\":%d,\"level\":%d,\"ttc\":%.1f,\"brake\":%d}\n", s, g, lat, up, lv, ttc, brk);
+    fprintf(f, "{\"speed\":%.1f,\"gap\":%.1f,\"lat\":%.1f,\"up\":%d,\"level\":%d,\"ttc\":%.1f,\"brake\":%d,\"jit\":%.0f}\n", s, g, lat, up, lv, ttc, brk, jit);
     fclose(f);
     rename("/tmp/stats.tmp", "/tmp/stats.json");
 }
@@ -36,11 +37,23 @@ int main(void) {
     float ego = 22.0f, gap = 45.0f, ttc = 99.0f;
     struct timespec prev;
     clock_gettime(CLOCK_MONOTONIC, &prev);
+    double jit = 0;
+    int tchid = ChannelCreate(0);
+    int tcoid = ConnectAttach(0, 0, tchid, _NTO_SIDE_CHANNEL, 0);
+    struct sigevent ev;
+    SIGEV_PULSE_INIT(&ev, tcoid, SIGEV_PULSE_PRIO_INHERIT, _PULSE_CODE_MINAVAIL, 0);
+    timer_t tid;
+    if (timer_create(CLOCK_MONOTONIC, &ev, &tid) == -1) { perror("timer_create"); return 1; }
+    struct itimerspec its = { { 0, 10000000 }, { 0, 10000000 } };
+    timer_settime(tid, 0, &its, NULL);
     for (;; i++) {
+        struct _pulse pu;
+        if (MsgReceive(tchid, &pu, sizeof(pu), NULL) != 0) continue;
         struct timespec now;
         clock_gettime(CLOCK_MONOTONIC, &now);
         double dt = (now.tv_sec - prev.tv_sec) + (now.tv_nsec - prev.tv_nsec) / 1e9;
         prev = now;
+        { double e = dt - 0.010; if (e < 0) e = -e; if (e > jit) jit = e; }
         if (dt > 0.1) dt = 0.1;
         t += dt;
         float lead = lead_speed(t);
@@ -70,9 +83,8 @@ int main(void) {
         }
         if (coid < 0) { lv = 1; ttc = 99.0f; }
         if (++tick >= 50) {
-            out(ego * 3.6f, gap, cnt ? sum / cnt : 0, coid >= 0, lv, ttc, brake);
-            sum = 0; cnt = 0; tick = 0;
+            out(ego * 3.6f, gap, cnt ? sum / cnt : 0, coid >= 0, lv, ttc, brake, jit * 1e6);
+            sum = 0; cnt = 0; tick = 0; jit = 0;
         }
-        usleep(10000);
     }
 }

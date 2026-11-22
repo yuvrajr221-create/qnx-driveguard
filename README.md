@@ -86,6 +86,7 @@ These numbers are from a single run on a shared cloud host and vary between runs
 |---|---|---|---|
 | 2.5 s / 1.5 s (1 run) | 4.5 m | 9 | 19.7 km/h |
 | 3 s / 2 s (2 runs) | 6.1 m and 6.1 m | 6 and 6 | 24.5 and 24.3 km/h |
+| 3 s / 2 s, sensor driven by the QNX timer (1 run) | 6.1 m | 4 | 23.4 km/h |
 
 The sensor writes a snapshot every 0.5 seconds, so the true smallest gap can be a little lower than shown. The scenario is simulated, so these numbers say nothing about real traffic.
 

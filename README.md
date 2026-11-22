@@ -7,7 +7,7 @@ Category: Automotive & Mobility
 ## What it does
 
 - `dg_sensor` (QNX process) runs a small car-following simulation: a lead car brakes and speeds up on a 30 second cycle, and our car brakes as the monitor tells it to. It sends every 10 ms step to the monitor with QNX message passing (`MsgSend`). If the monitor is down it falls back to gentle braking.
-- `dg_monitor` (QNX process, SCHED_FIFO priority 50) computes time to collision (gap divided by closing speed) and replies with a level: 0 safe, 1 warning (under 3 s), 2 emergency (under 2 s). It also looks at the time gap to the car ahead (`MsgReceive`, `MsgReply`).
+- `dg_monitor` (QNX process, SCHED_FIFO priority 50) computes time to collision (gap divided by closing speed) and replies with a level: 0 safe, 1 warning (under 2.5 s), 2 emergency (under 1.5 s). It also looks at the time gap to the car ahead (`MsgReceive`, `MsgReply`).
 - `dg_supervisor.sh` (runs on QNX) starts the monitor again if it dies.
 - `gateway.py` (runs on the Linux host) reads the sensor output from the QNX VM over SSH and serves `/api/stats`. `/api/kill` runs `slay dg_monitor` inside the VM, so the dashboard can inject a real fault.
 - `web/index.html` is the dashboard. It shows speed, gap, time to collision, monitor reply time, process health and an event log. The Kill button shows the supervisor recovering the monitor.

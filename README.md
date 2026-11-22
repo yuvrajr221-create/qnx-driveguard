@@ -12,6 +12,8 @@ Category: Automotive & Mobility
 - `gateway.py` (runs on the Linux host) reads the sensor output from the QNX VM over SSH and serves `/api/stats`. `/api/kill` runs `slay dg_monitor` inside the VM, so the dashboard can inject a real fault.
 - `web/index.html` is the dashboard. It shows speed, gap, time to collision, monitor reply time, process health and an event log. The Kill button shows the supervisor recovering the monitor.
 
+How we set up QNX 8.0 with only a phone: see [docs/TUTORIAL.md](docs/TUTORIAL.md).
+
 ## Where QNX is used
 
 - `src/dg_monitor.c`: `ChannelCreate`, `MsgReceive`, `MsgReply`, `pthread_setschedparam` with SCHED_FIFO 50

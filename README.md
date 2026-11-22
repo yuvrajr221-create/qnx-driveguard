@@ -63,6 +63,18 @@ All numbers come from a QEMU VM on a shared cloud host, not from target hardware
 - Dashboard reply time was about 15 to 40 us in our runs. This is a different measurement: the sensor sleeps 10 ms between messages, so the monitor wakes from idle each time. Do not compare it with the benchmark above.
 - Monitor kill to recovery: about 2 seconds, read from the dashboard event log. The supervisor waits 1 second before restarting by design.
 
+## Load test (QEMU VM, 2 virtual CPUs)
+
+`scripts/load_test.sh` builds `src/dg_load.c` and runs it inside the QNX VM. A periodic sender (every 2 ms, 3,000 samples) calls the monitor with `MsgSend`. Lateness is the time from when a sample was due until the reply came back. The loaded runs add four CPU-hog threads at priority 10 (round robin).
+
+| Case | p50 | p99 | max |
+|---|---|---|---|
+| no load, monitor priority 50 FIFO | 195 us | 309 us | 1,155 us |
+| 4 hogs, monitor priority 50 FIFO | 431 us | 1,027 us | 3,747 us |
+| 4 hogs, monitor priority 10 RR (same as the hogs) | 10,033 us | 16,988 us | 22,060 us |
+
+These numbers are from a single run on a shared cloud host and vary between runs: an earlier run of the first case gave p50 378 us. They are not hardware measurements, and we did not run the same test on Linux.
+
 ## Limitations
 
 - Sensor values are simulated.

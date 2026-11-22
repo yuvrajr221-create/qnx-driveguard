@@ -75,6 +75,17 @@ All numbers come from a QEMU VM on a shared cloud host, not from target hardware
 
 These numbers are from a single run on a shared cloud host and vary between runs: an earlier run of the first case gave p50 378 us. They are not hardware measurements, and we did not run the same test on Linux.
 
+## Simulation results (one 30 second cycle, QEMU VM)
+
+`scripts/measure_cycle.py` reads `/api/stats` for 35 seconds and prints the smallest gap, the smallest time to collision and how often the level changed. In each cycle the lead car brakes hard once.
+
+| Monitor thresholds (warning / emergency) | min gap | level changes | lowest speed |
+|---|---|---|---|
+| 2.5 s / 1.5 s (1 run) | 4.5 m | 9 | 19.7 km/h |
+| 3 s / 2 s (2 runs) | 6.1 m and 6.1 m | 6 and 6 | 24.5 and 24.3 km/h |
+
+The sensor writes a snapshot every 0.5 seconds, so the true smallest gap can be a little lower than shown. The scenario is simulated, so these numbers say nothing about real traffic.
+
 ## Limitations
 
 - Sensor values come from a simple simulated car-following model, not from real sensors.
